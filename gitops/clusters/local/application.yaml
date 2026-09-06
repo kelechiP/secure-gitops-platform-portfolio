@@ -1,0 +1,27 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: platform-api-local
+  namespace: argocd
+spec:
+  project: secure-platform-local
+  source:
+    repoURL: https://github.com/kelechiP/secure-gitops-platform-portfolio.git
+    targetRevision: main
+    path: helm/platform-api
+    helm:
+      values: |
+        environment: local
+        image:
+          repository: secure-gitops-platform-portfolio
+          tag: local
+          pullPolicy: IfNotPresent
+        autoscaling:
+          enabled: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: secure-platform
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

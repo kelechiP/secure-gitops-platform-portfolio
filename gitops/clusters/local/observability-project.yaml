@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: observability-local
+  namespace: argocd
+spec:
+  description: Local Platform API monitoring-resource reconciliation boundary
+  sourceRepos:
+    - https://github.com/kelechiP/secure-gitops-platform-portfolio.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: secure-platform
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: monitoring.coreos.com
+      kind: ServiceMonitor
+    - group: monitoring.coreos.com
+      kind: PrometheusRule
+  orphanedResources:
+    warn: true

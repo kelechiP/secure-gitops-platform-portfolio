@@ -1,0 +1,82 @@
+alertmanager:
+  enabled: false
+
+grafana:
+  defaultDashboardsEnabled: false
+  admin:
+    existingSecret: local-grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  service:
+    type: ClusterIP
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+      searchNamespace: monitoring
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+prometheus:
+  service:
+    type: ClusterIP
+  prometheusSpec:
+    retention: 24h
+    retentionSize: 1GB
+    serviceMonitorSelector: {}
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorNamespaceSelector:
+      matchLabels:
+        observability.secure-platform/enabled: "true"
+    ruleSelector: {}
+    ruleSelectorNilUsesHelmValues: false
+    ruleNamespaceSelector:
+      matchLabels:
+        observability.secure-platform/enabled: "true"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+      limits:
+        cpu: "1"
+        memory: 1Gi
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 100Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+kube-state-metrics:
+  resources:
+    requests:
+      cpu: 25m
+      memory: 64Mi
+    limits:
+      cpu: 150m
+      memory: 192Mi
+
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: 25m
+      memory: 32Mi
+    limits:
+      cpu: 150m
+      memory: 96Mi
+
+kubeControllerManager:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubeScheduler:
+  enabled: false

@@ -1,0 +1,170 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+env:
+  DOCKER_BUILD_RECORD_RETENTION_DAYS: 7
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Unit tests
+        run: python -m unittest discover -s app/tests -v
+      - name: Syntax validation
+        run: python -m compileall -q app/src app/tests
+      - name: Action pin validator tests
+        run: python -m unittest discover -s scripts/tests -v
+      - name: Reject mutable action references
+        run: python scripts/validate_action_pins.py
+
+  helm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: azure/setup-helm@9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310 # v5.0.1
+      - name: Lint Helm chart
+        run: helm lint helm/platform-api
+      - name: Render Kubernetes manifests
+        run: helm template platform-api helm/platform-api > /tmp/rendered.yaml
+      - name: Render digest-pinned Kubernetes manifests
+        run: >-
+          helm template platform-api helm/platform-api
+          --set image.tag= --set image.digest=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+          > /tmp/rendered-digest.yaml
+      - name: Reject ambiguous tag and digest
+        run: >-
+          ! helm template platform-api helm/platform-api
+          --set image.tag=v1.2.3
+          --set image.digest=sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+      - name: Reject invalid image digests
+        shell: bash
+        run: |
+          set -euo pipefail
+          invalid_digests=(
+            "sha256:abc123"
+            "sha256:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+            "sha512:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "not-a-digest"
+          )
+          for digest in "${invalid_digests[@]}"; do
+            if helm template platform-api helm/platform-api --set image.tag= --set-string "image.digest=${digest}" >/dev/null; then
+              echo "Expected Helm rendering to reject digest: ${digest}" >&2
+              exit 1
+            fi
+          done
+      - name: Render local observability resources
+        run: >-
+          helm template platform-api-observability helm/platform-api
+          --namespace secure-platform --set monitoring.resourcesOnly=true
+          --set monitoring.enabled=true > /tmp/observability.yaml
+      - name: Render pinned monitoring stack
+        run: |
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm template local-monitoring prometheus-community/kube-prometheus-stack --version 88.5.3 --namespace monitoring --values observability/kube-prometheus-stack-values.yaml > /tmp/monitoring-stack.yaml
+
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+      - name: Build image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: ./app
+          push: false
+          load: true
+          tags: secure-gitops-platform-portfolio:ci
+      - name: Scan image
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: secure-gitops-platform-portfolio:ci
+          scanners: vuln
+          format: table
+          exit-code: "1"
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+        with:
+          image: secure-gitops-platform-portfolio:ci
+          format: spdx-json
+          output-file: platform-api.spdx.json
+          upload-artifact: false
+          upload-release-assets: false
+          dependency-snapshot: false
+      - name: Validate generated SPDX SBOM
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          sbom = json.loads(Path("platform-api.spdx.json").read_text())
+          assert sbom["spdxVersion"].startswith("SPDX-2."), "Expected SPDX 2.x"
+          assert sbom["packages"], "Expected nonempty package inventory"
+          print(f"Validated {sbom['spdxVersion']} SBOM with {len(sbom['packages'])} packages")
+          PY
+
+  secrets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Detect secrets
+        uses: gitleaks/gitleaks-action@e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e # v3.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: "false"
+      - name: Retain secret scan report
+        if: ${{ always() && hashFiles('results.sarif') != '' }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: gitleaks-results
+          path: results.sarif
+          retention-days: 7
+          if-no-files-found: error
+
+  terraform:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.15.9
+          terraform_wrapper: false
+      - uses: terraform-linters/setup-tflint@6e1e0642c0289bd619021bf6b34e3c08ed1e005a # v6.3.0
+        with:
+          tflint_version: v0.64.0
+      - name: Check Terraform formatting
+        run: terraform fmt -check -recursive infra/terraform/aws
+      - name: Initialize Terraform without backend
+        working-directory: infra/terraform/aws
+        run: terraform init -backend=false -input=false
+      - name: Validate Terraform
+        working-directory: infra/terraform/aws
+        run: terraform validate
+      - name: Initialize TFLint plugins
+        run: tflint --chdir=infra/terraform/aws --init
+      - name: Lint Terraform
+        run: tflint --chdir=infra/terraform/aws --format compact
+      - name: Scan Terraform misconfigurations
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: infra/terraform/aws
+          scanners: misconfig
+          format: table
+          exit-code: "1"
+          severity: HIGH,CRITICAL
+          hide-progress: true

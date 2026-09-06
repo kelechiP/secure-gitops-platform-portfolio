@@ -1,0 +1,12 @@
+{{- if and (not .Values.monitoring.resourcesOnly) .Values.podDisruptionBudget.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "platform-api.name" . }}
+spec:
+  minAvailable: {{ .Values.podDisruptionBudget.minAvailable }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "platform-api.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

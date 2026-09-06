@@ -1,0 +1,42 @@
+# Copy outside the repository or to an ignored *.auto.tfvars file only for an
+# explicitly authorized deployment. Review current EKS version support first.
+aws_region        = "us-east-1"
+project_name      = "secure-gitops"
+environment       = "dev"
+cluster_version   = "1.34"
+availability_zones = [
+  "us-east-1a",
+  "us-east-1b",
+]
+public_subnet_cidrs = [
+  "10.40.0.0/24",
+  "10.40.1.0/24",
+]
+private_subnet_cidrs = [
+  "10.40.10.0/24",
+  "10.40.11.0/24",
+]
+
+# One NAT gateway lowers fixed development cost but is not AZ-resilient.
+nat_gateway_strategy = "single"
+
+# Keep the Kubernetes API private unless an approved, restricted CIDR is needed.
+cluster_endpoint_public_access       = false
+cluster_endpoint_public_access_cidrs = []
+
+# Supply an authorized IAM role/user ARN only during an approved deployment.
+# cluster_admin_principal_arn = "arn:aws:iam::<account-id>:role/<admin-role>"
+
+node_instance_types = ["t3.small"]
+node_capacity_type  = "SPOT"
+node_min_size       = 1
+node_desired_size   = 1
+node_max_size       = 2
+node_disk_size_gib  = 20
+
+control_plane_log_retention_days = 30
+
+additional_tags = {
+  Owner      = "platform-team"
+  CostCenter = "development"
+}

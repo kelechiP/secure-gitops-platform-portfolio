@@ -1,0 +1,69 @@
+{{- if not .Values.monitoring.resourcesOnly }}
+{{- $tag := .Values.image.tag | default "" }}
+{{- $digest := .Values.image.digest | default "" }}
+{{- if and $tag $digest }}
+{{- fail "image.tag and image.digest are mutually exclusive; clear image.tag when deploying by digest" }}
+{{- end }}
+{{- if and (not $tag) (not $digest) }}
+{{- fail "one of image.tag or image.digest must be set" }}
+{{- end }}
+{{- if and $digest (not (regexMatch "^sha256:[0-9a-f]{64}$" $digest)) }}
+{{- fail "image.digest must use canonical sha256:<64 lowercase hexadecimal characters> format" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "platform-api.name" . }}
+  labels:
+    {{- include "platform-api.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "platform-api.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        {{- include "platform-api.labels" . | nindent 8 }}
+    spec:
+      serviceAccountName: {{ include "platform-api.name" . }}
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: api
+          image: "{{ .Values.image.repository }}{{ if $digest }}@{{ $digest }}{{ else }}:{{ $tag }}{{ end }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.targetPort }}
+              protocol: TCP
+          env:
+            - name: APP_ENV
+              value: {{ .Values.environment | quote }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+{{- end }}

@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: secure-platform-local
+  namespace: argocd
+spec:
+  description: Local Secure GitOps Platform reconciliation boundary
+  sourceRepos:
+    - https://github.com/kelechiP/secure-gitops-platform-portfolio.git
+  destinations:
+    - server: https://kubernetes.default.svc
+      namespace: secure-platform
+  clusterResourceWhitelist: []
+  namespaceResourceWhitelist:
+    - group: ""
+      kind: ServiceAccount
+    - group: ""
+      kind: Service
+    - group: apps
+      kind: Deployment
+    - group: networking.k8s.io
+      kind: NetworkPolicy
+    - group: policy
+      kind: PodDisruptionBudget
+  orphanedResources:
+    warn: true
