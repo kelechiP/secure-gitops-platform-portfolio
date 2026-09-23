@@ -1,6 +1,6 @@
 # GitOps configuration and validation guide
 
-The manifests target `https://github.com/kelechiP/secure-gitops-platform-portfolio.git`. The repository is private and anonymous HTTPS access is unavailable. Live reconciliation is deferred until separately authorized public exposure. No authentication material or live validation evidence is included.
+The manifests target `https://github.com/kelechiP/secure-gitops-platform-portfolio.git`. The sanitized portfolio repository is public and anonymous HTTPS access is available without repository credentials. Live reconciliation remains unvalidated and requires a separately authorized local exercise. No authentication material or live validation evidence is included.
 
 ## Installation provenance
 
@@ -16,7 +16,7 @@ AppProjects restrict Argo CD's logical actions; they do not reduce the controlle
 
 ## Future authorized local exercise
 
-After repository access is available and local deployment is separately authorized:
+After local deployment is separately authorized:
 
 1. Build the portfolio local image and load it into the named kind cluster.
 2. Run the pinned installer and create `secure-platform` explicitly.

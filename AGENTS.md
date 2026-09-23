@@ -25,7 +25,7 @@
 
 - Preserve non-root execution, a read-only root filesystem, disabled privilege escalation, dropped capabilities, RuntimeDefault seccomp, explicit resources, a dedicated service account, disabled token mounting, and NetworkPolicy resources.
 - Never commit credentials, kubeconfig, local tools, virtual environments, caches, generated secrets, Terraform state, or build artifacts.
-- Never print or commit secret values. Repository authentication and live GitOps validation are deferred while this repository remains private.
+- Never print or commit secret values. This sanitized portfolio repository is public; anonymous HTTPS GitOps access needs no repository credential. Live GitOps validation still requires separate authorization.
 - Keep Trivy HIGH/CRITICAL and Gitleaks gates enabled. Fix findings rather than weakening gates.
 - Pin supply-chain inputs by immutable digest or commit SHA when practical; document remaining tag-based references.
 - Do not imply that planned cloud, GitOps, observability, scaling, signing, or policy features have been deployed or validated.

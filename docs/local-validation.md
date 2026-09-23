@@ -30,7 +30,7 @@ CI additionally exercises digest deployment, rejects conflicting tag/digest valu
 
 ## Limits
 
-- No release or GHCR package exists; first-package bootstrap is intentionally deferred because the guard fails closed.
+- No release tag, release, GHCR package, or published image exists. Mocked tests cover narrowly accepted first-package bootstrap and fail-closed outcomes; a live release requires separate authorization.
 - Actions use full commit pins and the Distroless runtime uses an immutable digest; these inputs require reviewed updates.
 - The monitoring chart and its images retain version tags rather than immutable digests.
 - HPA needs Metrics Server, and kind's default CNI does not enforce NetworkPolicy.

@@ -11,7 +11,7 @@
 - Ingress and egress NetworkPolicy resources
 - Secret detection and container vulnerability scanning in CI
 - Minimal application dependencies
-- HTTPS GitOps repository references; live access remains deferred while private
+- Public, anonymous HTTPS GitOps repository access; live reconciliation remains unvalidated
 - ClusterIP-only Prometheus and Grafana services
 - Generated local Grafana credentials stored only in a Kubernetes Secret
 - Separate AppProject allowlist for ServiceMonitor and PrometheusRule
@@ -38,7 +38,7 @@ These controls describe configuration only. No AWS account, runtime IAM policy, 
 
 The source repository, GitHub Actions, container registry, Argo CD control plane, and Kubernetes API are separate trust boundaries. Future cloud deployments will use short-lived workload identity and GitHub OIDC rather than static access keys.
 
-No repository authentication material is included. Anonymous HTTPS GitOps access requires separately authorized public exposure; live reconciliation is currently deferred. The local Argo CD installation script uses a ClusterIP server service.
+No repository authentication material is included. The public portfolio repository supports anonymous HTTPS GitOps access without repository credentials; live reconciliation is currently deferred. The local Argo CD installation script uses a ClusterIP server service.
 
 The `secure-platform-local` AppProject provides logical source, destination, and resource-kind restrictions inside Argo CD. It does not constrain the Kubernetes service-account permissions held by the Argo CD application controller. The standard local controller installation retains broader cluster RBAC; Kubernetes RBAC namespace isolation has not been implemented or tested.
 
@@ -50,7 +50,7 @@ The monitoring Helm release installs cluster-scoped CRDs and broad read/discover
 - The current network policy permits application ingress from any namespace to make local evaluation straightforward.
 - kind's default CNI does not enforce NetworkPolicy; resource rendering alone does not demonstrate enforcement.
 - HPA scaling was not verified because Metrics Server is not installed.
-- No release has been published and no GHCR package exists yet. Provenance, SBOM attestation, signing, and verification remain unvalidated. The release guard fails closed for an absent package; first-package bootstrap and a first release require separate authorization.
+- No release has been published and no GHCR package exists yet. Provenance, SBOM attestation, signing, and verification remain unvalidated. The release guard allows first-package bootstrap only for authenticated canonical `NAME_UNKNOWN` after successful token acquisition, and otherwise fails closed. A first release still requires separate authorization.
 - Signature admission control, external secrets, and policy-as-code remain roadmap items.
 - Immutable Action pins require reviewed maintenance to receive upstream fixes.
 - The Distroless base is digest-pinned and requires reviewed updates for security fixes. Kubernetes does not enforce signatures at admission.

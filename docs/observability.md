@@ -35,7 +35,7 @@ The chart is pinned by version, not by package digest. Container images use expl
 
 ## Prerequisites and installation order
 
-Prerequisites are Docker Desktop, the existing kind-secure-gitops cluster, kubectl, Helm 3, Argo CD, the Platform API image loaded into kind, and anonymous HTTPS repository access after separately authorized public exposure. GitOps installation is deferred while this repository remains private; no repository credential is included.
+Prerequisites are Docker Desktop, the existing kind-secure-gitops cluster, kubectl, Helm 3, Argo CD, the Platform API image loaded into kind, and anonymous HTTPS access to the public portfolio repository. No repository credential is required. GitOps installation and live monitoring, HPA behavior, and NetworkPolicy enforcement remain unvalidated and require separate authorization.
 
 The script performs this order:
 
