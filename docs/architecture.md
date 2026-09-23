@@ -21,7 +21,7 @@ This repository begins with a local `kind` cluster to keep evaluation reproducib
 
 Pull-request CI is read-only and cannot publish packages, request GitHub OIDC, create attestations, or sign images. Only a semantic-version tag triggers the release job, whose package, identity-token, and attestation writes are job-scoped. The image is built once, scanned and inventoried before publication, then addressed by digest for provenance, SBOM attestation, signing, and verification. No `latest` tag is produced.
 
-The runner, GitHub OIDC and attestation services, GHCR, and Sigstore are external trust boundaries. Argo CD receives no registry-write authority. Future promotion is a reviewed Git change to a verified digest; release CI does not write GitOps state. No release has been published and no GHCR package exists yet. Provenance, SBOM attestation, signing, and verification remain unvalidated. The package-existence guard fails closed for the first package, so bootstrap and the first release require separate authorization. See [release status](supply-chain-security.md#release-status).
+The runner, GitHub OIDC and attestation services, GHCR, and Sigstore are external trust boundaries. Argo CD receives no registry-write authority. Future promotion is a reviewed Git change to a verified digest; release CI does not write GitOps state. No release has been published and no GHCR package exists yet. Provenance, SBOM attestation, signing, and verification remain unvalidated. The guard permits bootstrap only for authenticated canonical `NAME_UNKNOWN` after successful token acquisition; uncertainty fails closed. The first release still requires separate authorization. See [release status](supply-chain-security.md#release-status).
 
 ## AWS infrastructure blueprint
 
@@ -33,7 +33,7 @@ CI performs formatting, backend-disabled initialization, validation, TFLint, and
 
 ## Argo CD trust boundaries
 
-The Argo CD manifests target `https://github.com/kelechiP/secure-gitops-platform-portfolio.git` over HTTPS. Anonymous reconciliation is deferred while this repository remains private. No repository credential is included and no live reconciliation has been validated from this repository. GitHub receives no cluster credential, CI receives no kubeconfig, and the Argo CD server remains a ClusterIP service without public ingress.
+The Argo CD manifests target `https://github.com/kelechiP/secure-gitops-platform-portfolio.git` over HTTPS. The sanitized portfolio repository is public and anonymously readable over HTTPS; no repository credential is required. No live reconciliation has been validated from this repository. GitHub receives no cluster credential, CI receives no kubeconfig, and the Argo CD server remains a ClusterIP service without public ingress.
 
 The `secure-platform-local` AppProject is Argo CD's logical authorization boundary for this workload. It admits only the repository HTTPS URL, the in-cluster API destination in `secure-platform`, and the five namespaced resource kinds rendered by the local chart. The namespace is created during bootstrap, so the AppProject admits no cluster-scoped kinds. The Application renders `helm/platform-api` and uses automated pruning and self-healing.
 

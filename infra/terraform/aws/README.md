@@ -79,7 +79,7 @@ CI runs the same controls without AWS credentials. It never runs `terraform plan
 
 ## Future Argo CD connection
 
-Argo CD installation into EKS is deferred. A future design must first provide reviewed administrator access, network reachability to the private API endpoint (for example through a VPN, transit network, or in-VPC runner), workload identity, namespace/RBAC boundaries, repository credentials, and a digest-pinned environment Application. This foundation grants GitHub and the current local Argo CD installation no AWS or EKS access.
+Argo CD installation into EKS is deferred. A future design must first provide reviewed administrator access, network reachability to the private API endpoint (for example through a VPN, transit network, or in-VPC runner), workload identity, namespace/RBAC boundaries, anonymous HTTPS access to this public repository (no repository credential required), and a digest-pinned environment Application. This foundation grants GitHub and the current local Argo CD installation no AWS or EKS access.
 
 ## Cost warning
 

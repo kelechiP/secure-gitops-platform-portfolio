@@ -58,15 +58,15 @@ See [local validation](docs/local-validation.md), [architecture](docs/architectu
 
 ## GitOps and observability
 
-The Applications target `https://github.com/kelechiP/secure-gitops-platform-portfolio.git`. This repository is currently private. Anonymous HTTPS reconciliation is intentionally deferred until separately authorized public exposure; no repository credential is included. No Kubernetes deployment was performed to initialize this repository.
+The Applications target `https://github.com/kelechiP/secure-gitops-platform-portfolio.git`. This sanitized portfolio repository is public and anonymous HTTPS access is available without a repository credential. Live reconciliation remains unvalidated and requires separate authorization. No Kubernetes deployment was performed to initialize this repository.
 
 The local workflow uses a locally built image loaded into kind. The Helm registry default points to the future portfolio image and cannot be pulled yet. See the [GitOps guide](docs/argocd-validation.md) and [observability guide](docs/observability.md) for future validation procedures.
 
 ## Release status
 
-No release has been published from this repository, and no GHCR package exists yet. The future image repository is `ghcr.io/kelechip/secure-gitops-platform-portfolio`. Provenance, SBOM attestation, signing, and signature verification remain unvalidated. SPDX generation in CI does not establish these guarantees.
+No release tag, published release, GHCR package, or published portfolio image exists yet. The repository has protected `main` and protected `v*` release tags. The future image repository is `ghcr.io/kelechip/secure-gitops-platform-portfolio`. Provenance, SBOM attestation, signing, and signature verification remain unvalidated. SPDX generation in CI does not establish these guarantees.
 
-A first release requires separate authorization. The release guard currently fails closed when the package does not exist, so package bootstrap is intentionally deferred. Public repository visibility does not guarantee successful attestation or signing. See [supply-chain security](docs/supply-chain-security.md).
+A first release requires separate authorization. The release guard permits first-package bootstrap only after successful token acquisition and an authenticated HTTP 404 with canonical `NAME_UNKNOWN` from GHCR tag enumeration. Other uncertain states fail closed. Public visibility enables artifact-attestation eligibility on the applicable GitHub plan, but does not guarantee successful attestation or signing. See [supply-chain security](docs/supply-chain-security.md).
 
 ## Scope and limitations
 

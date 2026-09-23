@@ -6,7 +6,7 @@ on:
       - "v*.*.*"
 
 concurrency:
-  group: release-${{ github.ref }}
+  group: release-${{ github.repository }}
   cancel-in-progress: false
 
 env:
@@ -85,6 +85,17 @@ jobs:
           upload-artifact: false
           upload-release-assets: false
           dependency-snapshot: false
+
+      - name: Validate generated SPDX SBOM
+        run: |
+          python3 - <<'PY'
+          import json
+          from pathlib import Path
+          sbom = json.loads(Path("platform-api.spdx.json").read_text())
+          assert sbom["spdxVersion"].startswith("SPDX-2."), "Expected SPDX 2.x"
+          assert sbom["packages"], "Expected nonempty package inventory"
+          print(f"Validated {sbom['spdxVersion']} SBOM with {len(sbom['packages'])} packages")
+          PY
 
       - name: Log in to GHCR
         uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0

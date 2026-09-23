@@ -35,7 +35,7 @@ Checked items describe implemented source and static validation. Live deployment
 - [x] SPDX generation and validation in CI
 - [x] Version guard, concurrency protection, and seven-day artifact retention
 - [x] Release workflow configuration for provenance, SBOM attestation, and signing
-- [ ] Separately reviewed first-package bootstrap; absent packages currently fail closed
+- [x] Narrow first-package bootstrap implementation and deterministic fail-closed registry tests
 - [ ] Independently authorized first release and successful provenance, SBOM attestation, signing, and verification
 - [ ] Admission policies and external secrets
 - [ ] Canary delivery and recovery exercises

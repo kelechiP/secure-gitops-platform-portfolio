@@ -23,8 +23,8 @@ jobs:
       - name: Unit tests
         run: python -m unittest discover -s app/tests -v
       - name: Syntax validation
-        run: python -m compileall -q app/src app/tests
-      - name: Action pin validator tests
+        run: python -m compileall -q app/src app/tests scripts
+      - name: Script and release security tests
         run: python -m unittest discover -s scripts/tests -v
       - name: Reject mutable action references
         run: python scripts/validate_action_pins.py

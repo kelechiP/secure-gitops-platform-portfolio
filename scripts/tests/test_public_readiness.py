@@ -18,7 +18,7 @@ class PublicReadinessTests(unittest.TestCase):
         guard = workflow.index("run: python3 scripts/check_release_tag.py")
         for operation in ("docker/setup-buildx-action@", "docker/build-push-action@", "docker push"):
             self.assertLess(guard, workflow.index(operation))
-        self.assertIn("group: release-${{ github.ref }}", workflow)
+        self.assertIn("group: release-${{ github.repository }}", workflow)
         self.assertIn("cancel-in-progress: false", workflow)
         section = workflow[workflow.index("- name: Refuse an existing"):guard]
         self.assertIn("GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}", section)
