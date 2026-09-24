@@ -3,7 +3,7 @@
 The platform separates application delivery from cluster reconciliation:
 
 1. GitHub Actions validates source, Kubernetes templates, secrets, and the container image.
-2. A separately authorized release workflow is designed to publish a scanned image, then attempt provenance, SBOM attestation, and keyless signing.
+2. The separately authorized release workflow published the verified `v0.1.0` image with provenance, SBOM attestation, and keyless signing; later releases require their own authorization.
 3. GitOps configuration records the desired image and Helm values.
 4. Argo CD detects desired-state changes and reconciles Kubernetes.
 5. Kubernetes performs rolling updates and continuously evaluates health probes.
@@ -21,7 +21,7 @@ This repository begins with a local `kind` cluster to keep evaluation reproducib
 
 Pull-request CI is read-only and cannot publish packages, request GitHub OIDC, create attestations, or sign images. Only a semantic-version tag triggers the release job, whose package, identity-token, and attestation writes are job-scoped. The image is built once, scanned and inventoried before publication, then addressed by digest for provenance, SBOM attestation, signing, and verification. No `latest` tag is produced.
 
-The runner, GitHub OIDC and attestation services, GHCR, and Sigstore are external trust boundaries. Argo CD receives no registry-write authority. Future promotion is a reviewed Git change to a verified digest; release CI does not write GitOps state. No release has been published and no GHCR package exists yet. Provenance, SBOM attestation, signing, and verification remain unvalidated. The guard permits bootstrap only for authenticated canonical `NAME_UNKNOWN` after successful token acquisition; uncertainty fails closed. The first release still requires separate authorization. See [release status](supply-chain-security.md#release-status).
+The runner, GitHub OIDC and attestation services, GHCR, and Sigstore are external trust boundaries. Argo CD receives no registry-write authority. Future promotion is a reviewed Git change to a verified digest; release CI does not write GitOps state. The `v0.1.0` container release and public GHCR package now exist; provenance, SBOM attestation, signing, and independent verification succeeded for its exact digest. See the [verified release record](verified-first-release.md). The guard permits bootstrap only for authenticated canonical `NAME_UNKNOWN` after successful token acquisition; uncertainty fails closed. Future releases still require separate authorization. See [release status](supply-chain-security.md#release-status).
 
 ## AWS infrastructure blueprint
 

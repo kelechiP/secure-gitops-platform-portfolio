@@ -30,7 +30,7 @@ CI additionally exercises digest deployment, rejects conflicting tag/digest valu
 
 ## Limits
 
-- No release tag, release, GHCR package, or published image exists. Mocked tests cover narrowly accepted first-package bootstrap and fail-closed outcomes; a live release requires separate authorization.
+- The separately authorized [first container release](verified-first-release.md) passed live bootstrap, publication, and independent attestation/signature verification. Local mocked tests still cover rejected registry states; future releases require separate authorization.
 - Actions use full commit pins and the Distroless runtime uses an immutable digest; these inputs require reviewed updates.
 - The monitoring chart and its images retain version tags rather than immutable digests.
 - HPA needs Metrics Server, and kind's default CNI does not enforce NetworkPolicy.

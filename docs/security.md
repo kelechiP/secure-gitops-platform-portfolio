@@ -50,7 +50,7 @@ The monitoring Helm release installs cluster-scoped CRDs and broad read/discover
 - The current network policy permits application ingress from any namespace to make local evaluation straightforward.
 - kind's default CNI does not enforce NetworkPolicy; resource rendering alone does not demonstrate enforcement.
 - HPA scaling was not verified because Metrics Server is not installed.
-- No release has been published and no GHCR package exists yet. Provenance, SBOM attestation, signing, and verification remain unvalidated. The release guard allows first-package bootstrap only for authenticated canonical `NAME_UNKNOWN` after successful token acquisition, and otherwise fails closed. A first release still requires separate authorization.
+- The [verified `v0.1.0` release](verified-first-release.md) has a public GHCR package and independently verified provenance, SBOM attestation, and keyless signature. These guarantees are digest-specific, not cluster admission enforcement. The release guard allows first-package bootstrap only for authenticated canonical `NAME_UNKNOWN` after successful token acquisition, and otherwise fails closed. Future releases still require separate authorization.
 - Signature admission control, external secrets, and policy-as-code remain roadmap items.
 - Immutable Action pins require reviewed maintenance to receive upstream fixes.
 - The Distroless base is digest-pinned and requires reviewed updates for security fixes. Kubernetes does not enforce signatures at admission.
