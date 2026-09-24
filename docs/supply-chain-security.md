@@ -8,9 +8,9 @@ No cloud infrastructure, cloud credential, long-lived signing key, personal acce
 
 ## Release status
 
-The sanitized portfolio repository is public, with protected `main` and protected `v*` release tags. Anonymous HTTPS repository access is available without credentials. No release tag, published release, GHCR package, or published portfolio image exists yet. The future image repository is `ghcr.io/kelechip/secure-gitops-platform-portfolio`. Local and CI SPDX SBOM generation do not constitute publication or attestation. Provenance, SBOM attestation, signing, and signature verification remain unvalidated. A first release requires separate authorization.
+The sanitized portfolio repository is public, with protected `main` and protected `v*` release tags. Anonymous HTTPS repository access is available without credentials. The separately authorized `v0.1.0` container release completed successfully and is anonymously pullable from its public GHCR package. Provenance, SBOM attestation, and keyless Cosign signing and verification succeeded for the exact image digest. The [verified first-release record](verified-first-release.md) lists the version, commit, digest, workflow, package, SPDX inventory, identity constraints, reviewer commands, and seven-day evidence retention. No GitHub Release object was created.
 
-First-package bootstrap is implemented under the narrow conditions below; it has not been exercised against GHCR with a release-job token. Public visibility enables [artifact-attestation eligibility on applicable GitHub plans](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), but does not guarantee successful attestation or signing. This change performs no release or Kubernetes operation. AWS/EKS remains a non-deployed static blueprint; live Argo CD reconciliation, monitoring, HPA behavior, and NetworkPolicy enforcement remain unvalidated.
+First-package bootstrap was exercised successfully with the release job's scoped token under the narrow conditions below. Ordinary local and CI SPDX generation still do not constitute publication or attestation. Public visibility enables [artifact-attestation eligibility on applicable GitHub plans](https://docs.github.com/en/actions/how-tos/secure-your-work/use-artifact-attestations/use-artifact-attestations), but does not guarantee success for future runs. Future releases require separate authorization. AWS/EKS remains a non-deployed static blueprint; live Argo CD reconciliation, monitoring, HPA behavior, and NetworkPolicy enforcement remain unvalidated.
 
 ## CI and release responsibilities
 
@@ -71,21 +71,9 @@ Official release tags were resolved to these upstream commits on 2026-08-23; the
 
 ## Release verification
 
-After this change is reviewed and merged, a separate authorization must cover selecting an unused semantic version, creating and pushing its tag from reviewed `main`, and running the first release. Do not bypass an uncertain registry result or overwrite an existing version to repair a failed release. Initial GHCR package visibility is independent of repository visibility; review package access and separately authorize any necessary visibility change before claiming anonymous image pulls. Inspect the release gates, published digest, provenance, SBOM attestation, signature, and verification results before separately proposing digest-based GitOps promotion. A failure after publication may require a new version, not a rerun of an existing version.
+The [verified first-release record](verified-first-release.md#reviewer-verification-commands) contains exact commands for `v0.1.0`, including source commit/ref and certificate identity constraints for GitHub attestations, Cosign verification, and anonymous registry checks.
 
-After a successful authorized run, verify its captured digest:
-
-```powershell
-$image = "ghcr.io/kelechip/secure-gitops-platform-portfolio"
-$digest = "sha256:<published-digest>"
-cosign verify `
-  --certificate-identity "https://github.com/kelechiP/secure-gitops-platform-portfolio/.github/workflows/release.yml@refs/tags/v1.2.3" `
-  --certificate-oidc-issuer "https://token.actions.githubusercontent.com" `
-  "${image}@${digest}"
-gh attestation verify "oci://${image}@${digest}" --repo kelechiP/secure-gitops-platform-portfolio
-```
-
-These commands are examples for a future independently authorized release, not evidence of a published or verified image. Replace the example version and digest only after that release succeeds.
+Each future release requires separate authorization to select an unused semantic version and create/push its tag from reviewed `main`. Do not bypass uncertain registry results, rerun publication to overwrite an existing version, or move/delete a release tag. Package visibility is independent of repository visibility and must be checked. A failure after publication may leave an image without complete evidence; a new version requires new authorization. Digest-based GitOps promotion remains separate reviewed work.
 
 ## Digest-based GitOps promotion and rollback
 
@@ -102,7 +90,7 @@ A future reviewed promotion updates GitOps desired state to the GHCR repository 
 
 ## Remaining limitations
 
-- Publication, provenance, SBOM attestation, signing, and signature verification remain unvalidated.
+- Publication and independent evidence verification are established only for the recorded `v0.1.0` digest; they do not guarantee future releases or deployment enforcement.
 - GitHub and Sigstore availability and policy are external dependencies.
 - The base digest fixes one build input; it does not establish bit-for-bit reproducibility.
 - The release is single-platform; no multi-architecture manifest is produced.

@@ -13,7 +13,7 @@ flowchart LR
     Git[Reviewed GitOps configuration] --> Argo[Argo CD]
     Argo --> K8s[Local Kubernetes]
     K8s --> Metrics[Prometheus and Grafana]
-    Release[Separately authorized release] -.-> Registry[Future GHCR image]
+    Release[Authorized container release] --> Registry[Verified GHCR image]
 ```
 
 ## Engineering focus
@@ -60,13 +60,13 @@ See [local validation](docs/local-validation.md), [architecture](docs/architectu
 
 The Applications target `https://github.com/kelechiP/secure-gitops-platform-portfolio.git`. This sanitized portfolio repository is public and anonymous HTTPS access is available without a repository credential. Live reconciliation remains unvalidated and requires separate authorization. No Kubernetes deployment was performed to initialize this repository.
 
-The local workflow uses a locally built image loaded into kind. The Helm registry default points to the future portfolio image and cannot be pulled yet. See the [GitOps guide](docs/argocd-validation.md) and [observability guide](docs/observability.md) for future validation procedures.
+The local workflow uses a locally built image loaded into kind. The published portfolio image is anonymously pullable, but the Helm default still selects the intentionally absent `latest` tag. A future deployment must separately select a verified digest or deliberate version; no GitOps image reference was changed. See the [GitOps guide](docs/argocd-validation.md) and [observability guide](docs/observability.md) for future validation procedures.
 
 ## Release status
 
-No release tag, published release, GHCR package, or published portfolio image exists yet. The repository has protected `main` and protected `v*` release tags. The future image repository is `ghcr.io/kelechip/secure-gitops-platform-portfolio`. Provenance, SBOM attestation, signing, and signature verification remain unvalidated. SPDX generation in CI does not establish these guarantees.
+The separately authorized `v0.1.0` container release succeeded. Both its version and full-commit tags resolve to `sha256:2332bac5c9ad7abc7de0cbf9b8dc9dbe0777ec5fb8aa5b3c2831187ea2a3c5a9`. Anonymous pulling, GitHub provenance and SBOM attestations, and keyless Cosign signature verification passed independently. The SPDX 2.3 SBOM contains 39 packages. `latest` was not published.
 
-A first release requires separate authorization. The release guard permits first-package bootstrap only after successful token acquisition and an authenticated HTTP 404 with canonical `NAME_UNKNOWN` from GHCR tag enumeration. Other uncertain states fail closed. Public visibility enables artifact-attestation eligibility on the applicable GitHub plan, but does not guarantee successful attestation or signing. See [supply-chain security](docs/supply-chain-security.md).
+See the [verified release record and reviewer commands](docs/verified-first-release.md) for the release commit, workflow, public package, evidence retention, and limitations. The repository retains protected `main` and protected `v*` tags. No infrastructure was deployed; future releases and GitOps promotion require separate authorization. Ordinary CI SPDX generation alone does not establish the release's attestation guarantees. See [supply-chain security](docs/supply-chain-security.md).
 
 ## Scope and limitations
 
