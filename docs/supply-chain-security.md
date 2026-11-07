@@ -37,25 +37,29 @@ Tag protections separately prohibit updates and deletion of `v*` tags without by
 
 Future CI and release Buildx records and release evidence have explicit seven-day retention. Gitleaks' default artifact upload is disabled only to replace it with one seven-day SARIF upload that also runs after scan failure when a report exists; scanning, summaries, and the failure gate remain enabled. No SBOM artifact is retained by the CI generation check; it is validated on the runner without publication.
 
-## Distroless base pin
+## Current Distroless base pin
 
-The Dockerfile pins `gcr.io/distroless/python3-debian13:nonroot` to official index digest `sha256:8ee214843129f43e2ebf5e0ca9f2e4e6d8292143d1b8a6787f169b5898578884`, resolved from `gcr.io` on 2026-09-23. Its `linux/amd64` child is `sha256:359614ec673d26ff9f9de9edabe2e6764a45a97a7791f309e5dca218c5a18295`. The index also contains arm64 and riscv64; the release remains single-platform on its hosted runner.
+The Dockerfile pins `gcr.io/distroless/python3-debian13:nonroot` to official index digest `sha256:1c32c3720dc4c7f0c7dbe998737f32c200add6511eca7cec705008be488b87d6`, independently resolved from the official `gcr.io/distroless/python3-debian13` registry on 2026-11-07. Its `linux/amd64` child is `sha256:f7f5ca4fd8d9b2d7f70a436da50d2051ab30468c9055eea5597b61286061efea`. The index also supports arm64 and riscv64; the application build remains single-platform. The amd64 image runs as UID 65532 with `/usr/bin/python3.13` as its entrypoint. Application startup, non-root ownership, and runtime security settings are unchanged; no shell or package manager is added.
 
-The refreshed digest addresses fixable Python and SQLite HIGH findings in the previous base (CVE-2026-11940, CVE-2026-11822, and CVE-2026-11824); the vulnerability gate remains unchanged.
+The preceding base produced Trivy failures in the Action-only dependency PRs. Their October scans reported two fixable HIGH OpenSSL findings; the November scans reported six fixable HIGH findings: five in `libexpat1` (CVE-2026-66046, CVE-2026-76956, CVE-2026-76957, CVE-2026-77214, CVE-2026-93990) and one in `libssl3t64` (CVE-2026-84782). The updated base passed the unchanged container gate in the digest-update PR and in the local 2026-11-07 scan (zero applicable HIGH/CRITICAL findings). The gate continues to reject applicable HIGH/CRITICAL findings while excluding unfixed vulnerabilities under the existing policy; findings can change as vulnerability data evolves.
 
-The readable tag explains runtime intent; the digest fixes the base bytes despite upstream tag movement. Non-root ownership, Python execution, and application behavior remain unchanged. Reviewed digest updates are needed for security fixes. This improves input reproducibility without claiming bit-for-bit reproducible builds. Focused tests reject removal or malformation of the base pin.
+The readable tag explains runtime intent; the digest fixes the base bytes despite tag movement. Reviewed digest updates remain necessary for security fixes. Pinning does not establish bit-for-bit reproducible builds.
 
-## Immutable Action inventory
+### Historical release boundary
 
-Official release tags were resolved to these upstream commits on 2026-08-23; the Anchore v0.24.2 tag was independently resolved on 2026-09-05. Version comments are informational; GitHub executes the full SHA.
+This current dependency inventory describes the proposed inputs for future builds, not the inputs that produced `v0.1.0`. That release used index `sha256:8ee214843129f43e2ebf5e0ca9f2e4e6d8292143d1b8a6787f169b5898578884` and amd64 child `sha256:359614ec673d26ff9f9de9edabe2e6764a45a97a7791f309e5dca218c5a18295`. Its original Action pins remain available in the [release workflow at the release commit](https://github.com/kelechiP/secure-gitops-platform-portfolio/blob/e14533f30681c4d3783c4de55b03c6072a3884fb/.github/workflows/release.yml). The [verified release record](verified-first-release.md), tag, published image, and signed evidence are unchanged. Dependency maintenance does not rebuild or repair an already-published image; any future release needs separate authorization.
+
+## Current immutable Action inventory
+
+The five November updates below were independently resolved from official upstream release tags on 2026-11-07. Other pins retain their prior review (2026-08-23, with Anchore v0.24.2 reviewed on 2026-09-05). This table matches current workflow configuration; it is not the historical release inventory. Version comments are informational; GitHub executes the full SHA.
 
 | Action | Version | Commit SHA | Official upstream |
 |---|---|---|---|
 | `actions/checkout` | v7.0.1 | `3d3c42e5aac5ba805825da76410c181273ba90b1` | https://github.com/actions/checkout |
-| `actions/setup-python` | v7.0.0 | `5fda3b95a4ea91299a34e894583c3862153e4b97` | https://github.com/actions/setup-python |
+| `actions/setup-python` | v7.1.0 | `6d4fd22b20465ccc0f7354476588e8df7c9ca0e0` | https://github.com/actions/setup-python |
 | `azure/setup-helm` | v5.0.1 | `9bc31f4ebc9c6b171d7bfbaa5d006ae7abdb4310` | https://github.com/Azure/setup-helm |
-| `docker/setup-buildx-action` | v4.3.0 | `37fe631027851001ddb9b187196cc803df7f5f0e` | https://github.com/docker/setup-buildx-action |
-| `docker/build-push-action` | v7.3.0 | `53b7df96c91f9c12dcc8a07bcb9ccacbed38856a` | https://github.com/docker/build-push-action |
+| `docker/setup-buildx-action` | v4.4.1 | `f87e5991a6d7451dcb8d9637bfbc97413f497069` | https://github.com/docker/setup-buildx-action |
+| `docker/build-push-action` | v7.4.0 | `c3c9e263c25d99ce0380d002d59b67737d91b0dc` | https://github.com/docker/build-push-action |
 | `aquasecurity/trivy-action` | v0.36.0 | `ed142fd0673e97e23eac54620cfb913e5ce36c25` | https://github.com/aquasecurity/trivy-action |
 | `gitleaks/gitleaks-action` | v3.0.0 | `e0c47f4f8be36e29cdc102c57e68cb5cbf0e8d1e` | https://github.com/gitleaks/gitleaks-action |
 | `docker/login-action` | v4.6.0 | `dbcb813823bdd20940b903addbd779551569679f` | https://github.com/docker/login-action |
@@ -63,9 +67,19 @@ Official release tags were resolved to these upstream commits on 2026-08-23; the
 | `actions/attest-build-provenance` | v4.2.2 | `4d101475d8b20a2381f78447822ac1eab6504dd8` | https://github.com/actions/attest-build-provenance |
 | `actions/attest` | v4.2.2 | `1e69f48acb82d1966a394da916b4c1698aa569d6` | https://github.com/actions/attest |
 | `sigstore/cosign-installer` | v4.1.2 | `6f9f17788090df1f26f669e9d70d6ae9567deba6` | https://github.com/sigstore/cosign-installer |
-| `actions/upload-artifact` | v7.0.1 | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` | https://github.com/actions/upload-artifact |
+| `actions/upload-artifact` | v7.0.2 | `cf430e030ddbb5b0abf93d22962f4752f3646cd9` | https://github.com/actions/upload-artifact |
 | `hashicorp/setup-terraform` | v4.0.1 | `dfe3c3f87815947d99a8997f908cb6525fc44e9e` | https://github.com/hashicorp/setup-terraform |
-| `terraform-linters/setup-tflint` | v6.3.0 | `6e1e0642c0289bd619021bf6b34e3c08ed1e005a` | https://github.com/terraform-linters/setup-tflint |
+| `terraform-linters/setup-tflint` | v6.3.2 | `6ffdbaa3be476b3431f7275c26966ef32ff60337` | https://github.com/terraform-linters/setup-tflint |
+
+November release-note review:
+
+- [Build/push v7.4.0](https://github.com/docker/build-push-action/releases/tag/v7.4.0) prevents workflow-command injection in metadata logs, adopts shared Buildx error handling, and refreshes dependencies.
+- [Buildx v4.4.0](https://github.com/docker/setup-buildx-action/releases/tag/v4.4.0) uses official releases for the cloud driver and pre-pulls BuildKit; [v4.4.1](https://github.com/docker/setup-buildx-action/releases/tag/v4.4.1) skips that pre-pull for explicit endpoints. This repository uses the default builder path.
+- [Python v7.1.0](https://github.com/actions/setup-python/releases/tag/v7.1.0) adds optional mirror/mirror-token inputs, improves errors, and refreshes cache and dependencies. No custom mirror or credential is enabled here.
+- [Artifact v7.0.2](https://github.com/actions/upload-artifact/releases/tag/v7.0.2) improves HTTP 429 retries and Retry-After handling via its artifact dependency; seven-day retention remains unchanged.
+- [TFLint setup v6.3.2](https://github.com/terraform-linters/setup-tflint/releases/tag/v6.3.2) builds its distribution on release and requires a semantic-version TFLint input. The existing `v0.64.0` input satisfies that requirement; the TFLint binary version is unchanged.
+
+No reviewed release note requires additional workflow permissions. PR permissions remain read-only, and package/OIDC/attestation writes remain confined to the release job. No unrelated Actions, release gates, signing identities, concurrency settings, or publication behavior are changed.
 
 `scripts/validate_action_pins.py` checks Actions and reusable workflows in `.yml` and `.yaml` files. It accepts local Actions, full 40-character remote commits, and Docker Actions pinned by `sha256`; it rejects tags, branches, abbreviated SHAs, and tag-based Docker Actions. Unit tests cover job- and step-level syntax, quotes, and trailing comments.
 
